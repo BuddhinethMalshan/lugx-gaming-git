@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: lugx-analytics-service
-        image: lugx-analytics-service:latest
+        image: buddhinethmalshan/lugx-analytics-service:blue
         imagePullPolicy: Never
         ports:
         - containerPort: 3000

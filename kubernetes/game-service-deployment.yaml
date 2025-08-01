@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-service
+  namespace: lugx-gaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: game-service
+  template:
+    metadata:
+      labels:
+        app: game-service
+    spec:
+      containers:
+      - name: game-service
+        image: lugx-game-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PGUSER
+          value: "lugx"
+        - name: PGPASSWORD
+          value: "password"
+        - name: PGHOST
+          value: "postgres-service.lugx-gaming.svc.cluster.local"
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: "lugx_gaming"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: game-service
+  namespace: lugx-gaming
+spec:
+  selector:
+    app: game-service
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP

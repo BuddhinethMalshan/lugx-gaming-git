@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lugx-analytics-service
+  namespace: lugx-gaming
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lugx-analytics-service
+  template:
+    metadata:
+      labels:
+        app: lugx-analytics-service
+    spec:
+      containers:
+      - name: lugx-analytics-service
+        image: lugx-analytics-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lugx-analytics-service
+  namespace: lugx-gaming
+spec:
+  type: ClusterIP  # <-- THIS MUST BE SET
+  selector:
+    app: lugx-analytics-service
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000

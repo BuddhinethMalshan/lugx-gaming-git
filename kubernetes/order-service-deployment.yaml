@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: lugx-gaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+      - name: order-service
+        image: lugx-order-service:latest
+        ports:
+        - containerPort: 3000
+        imagePullPolicy: Never
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: lugx-gaming
+spec:
+  selector:
+    app: order-service
+  ports:
+  - port: 3000
+    targetPort: 3000

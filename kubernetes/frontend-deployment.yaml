@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: lugx-frontend:latest
+        image: buddhinethmalshan/lugx-frontend-service:blue
         ports:
         - containerPort: 80
         imagePullPolicy: Never

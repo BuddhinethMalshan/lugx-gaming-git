@@ -75,6 +75,6 @@ jobs:
       run: |
         sed -i "s|image: buddhinethmalshan/lugx-game-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:latest|g" kubernetes/game-service-deployment.yaml
         sed -i "s|image: buddhinethmalshan/lugx-order-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:latest|g" kubernetes/order-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-analytics-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest|g" kubernetes/lugx-analytics-service-deployment.yaml
+        sed -i "s|image: buddhinethmalshan/lugx-analytics-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest|g" kubernetes/analytics-service-deployment.yaml
         sed -i "s|image: buddhinethmalshan/lugx-frontend-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:latest|g" kubernetes/frontend-deployment.yaml
-        kubectl apply -f kubernetes/ -n lugx-gaming
+        kubectl apply -f kubernetes/ -n lugx-gaming --validate=false

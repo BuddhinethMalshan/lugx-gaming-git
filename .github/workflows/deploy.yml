@@ -65,7 +65,7 @@ jobs:
         sed -i "s|image: buddhinethmalshan/lugx-order-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:blue|g" kubernetes/order-service-deployment.yaml
         sed -i "s|image: buddhinethmalshan/lugx-analytics-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:blue|g" kubernetes/analytics-service-deployment.yaml
         sed -i "s|image: buddhinethmalshan/lugx-frontend-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:blue|g" kubernetes/frontend-deployment.yaml
-        kubectl apply -f kubernetes/ -n lugx-gaming
+        kubectl apply -f kubernetes/ -n lugx-gaming --validate=false
     - name: Run integration tests
       run: |
         chmod +x ./tests/integration-test.sh

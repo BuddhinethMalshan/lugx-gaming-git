@@ -59,6 +59,7 @@ jobs:
       run: |
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
+        kubectl config use-context minikube
     - name: Deploy to lugx-gaming with blue tag
       run: |
         sed -i "s|image: buddhinethmalshan/lugx-game-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:blue|g" kubernetes/game-service-deployment.yaml

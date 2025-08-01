@@ -21,7 +21,7 @@ fi
 echo "game-service /games POST: OK"
 
 # Test order-service
-response=$(curl -s -o /dev/null -w "%{http_code}" http://lugx-gaming.test/orders -H "Content-Type: application/json" -d '{"order_id":101,"game_id":12,"user_id":"user123","quantity":2}')
+response=$(curl -s -o /dev/null -w "%{http_code}" http://lugx-gaming.test/orders -H "Content-Type: application/json" -d '{"game_id":12,"user_id":"123","quantity":2}')
 if [ "$response" != "200" ] && [ "$response" != "201" ]; then
   echo "order-service /orders POST failed: HTTP $response"
   exit 1

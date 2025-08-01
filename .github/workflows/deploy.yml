@@ -60,12 +60,11 @@ jobs:
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
         kubectl config use-context minikube
-    - name: Deploy to lugx-gaming with blue tag
+    - name: Update deployment image tags
       run: |
-        sed -i "s|image: buddhinethmalshan/lugx-game-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:blue|g" kubernetes/game-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-order-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:blue|g" kubernetes/order-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-analytics-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:blue|g" kubernetes/analytics-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-frontend-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:blue|g" kubernetes/frontend-deployment.yaml
+        find kubernetes/ -type f -name "*-deployment.yaml" -exec sed -i "s|image: buddhinethmalshan/lugx-[a-z-]*:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/\0:blue|g" {} \;
+    - name: Deploy to lugx-gaming
+      run: |
         kubectl apply -f kubernetes/ -n lugx-gaming --validate=false
     - name: Run integration tests
       run: |
@@ -74,8 +73,5 @@ jobs:
     - name: Rollback on test failure
       if: failure()
       run: |
-        sed -i "s|image: buddhinethmalshan/lugx-game-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:latest|g" kubernetes/game-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-order-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:latest|g" kubernetes/order-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-analytics-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest|g" kubernetes/analytics-service-deployment.yaml
-        sed -i "s|image: buddhinethmalshan/lugx-frontend-service:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:latest|g" kubernetes/frontend-deployment.yaml
+        find kubernetes/ -type f -name "*-deployment.yaml" -exec sed -i "s|image: buddhinethmalshan/lugx-[a-z-]*:[^ ]*|image: ${{ secrets.DOCKER_USERNAME }}/\0:latest|g" {} \;
         kubectl apply -f kubernetes/ -n lugx-gaming --validate=false

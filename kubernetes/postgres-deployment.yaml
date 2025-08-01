@@ -20,7 +20,7 @@ spec:
         - name: POSTGRES_USER
           value: "lugx"
         - name: POSTGRES_PASSWORD
-          value: "password"
+          value: "password"  # Replace with a secure password in production
         - name: POSTGRES_DB
           value: "lugx_gaming"
         ports:
@@ -28,9 +28,15 @@ spec:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
       volumes:
       - name: postgres-storage
         emptyDir: {}
+      - name: init-script
+        hostPath:
+          path: /home/buddhineth_malshan/lugx-gaming/kubernetes
+          type: Directory
 ---
 apiVersion: v1
 kind: Service

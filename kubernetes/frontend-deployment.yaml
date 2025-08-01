@@ -16,9 +16,9 @@ spec:
       containers:
       - name: frontend
         image: buddhinethmalshan/lugx-frontend-service:blue
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
-        imagePullPolicy: Never
 ---
 apiVersion: v1
 kind: Service

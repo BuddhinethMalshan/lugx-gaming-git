@@ -16,9 +16,9 @@ spec:
       containers:
       - name: order-service
         image: buddhinethmalshan/lugx-order-service:blue
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
-        imagePullPolicy: Never
 ---
 apiVersion: v1
 kind: Service

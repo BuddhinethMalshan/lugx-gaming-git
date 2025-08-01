@@ -16,7 +16,7 @@ spec:
       containers:
       - name: game-service
         image: buddhinethmalshan/lugx-game-service:blue
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:

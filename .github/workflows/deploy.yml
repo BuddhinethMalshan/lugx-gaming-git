@@ -5,6 +5,13 @@ on:
     branches: [ main ]
   schedule:
     - cron: '0 * * * *' # Run tests hourly
+name: Lugx Gaming CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 * * * *' # Run tests hourly
 
 jobs:
   build-and-push:
@@ -28,7 +35,7 @@ jobs:
         context: ./game-service
         file: ./game-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:blue
 
     - name: Build and push order-service
       uses: docker/build-push-action@v4
@@ -36,7 +43,7 @@ jobs:
         context: ./order-service
         file: ./order-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:blue
 
     - name: Build and push lugx-analytics-service
       uses: docker/build-push-action@v4
@@ -44,7 +51,7 @@ jobs:
         context: ./analytics-service
         file: ./analytics-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:blue
 
     - name: Build and push frontend-service
       uses: docker/build-push-action@v4
@@ -52,9 +59,9 @@ jobs:
         context: ./frontend
         file: ./frontend/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:blue
 
-  deploy-blue-green:
+  deploy-blue:
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
@@ -71,32 +78,27 @@ jobs:
         echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
 
-    - name: Create namespaces if not exist
+    - name: Deploy to lugx-gaming with blue tag
       run: |
-        kubectl create namespace lugx-gaming-blue --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create namespace lugx-gaming-green --dry-run=client -o yaml | kubectl apply -f -
-
-    - name: Deploy to Green environment
-      run: |
-        sed -i "s|image: lugx-game-service:latest|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:latest|g" kubernetes/game-service-deployment.yaml
-        sed -i "s|image: lugx-order-service:latest|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:latest|g" kubernetes/order-service-deployment.yaml
-        sed -i "s|image: lugx-analytics-service:latest|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest|g" kubernetes/analytics-service-deployment.yaml
-        sed -i "s|image: lugx-frontend-service:latest|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:latest|g" kubernetes/frontend-deployment.yaml
-        kubectl apply -f kubernetes/ -n lugx-gaming-green
+        sed -i "s|image: .*lugx-game-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:blue|g" kubernetes/game-service-deployment.yaml
+        sed -i "s|image: .*lugx-order-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:blue|g" kubernetes/order-service-deployment.yaml
+        sed -i "s|image: .*lugx-analytics-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:blue|g" kubernetes/analytics-service-deployment.yaml
+        sed -i "s|image: .*lugx-frontend-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:blue|g" kubernetes/frontend-deployment.yaml
+        kubectl apply -f kubernetes/ -n lugx-gaming
 
     - name: Run integration tests
       run: |
         chmod +x ./tests/integration-test.sh
         ./tests/integration-test.sh
 
-    - name: Switch traffic to Green
+    - name: Rollback on test failure
+      if: failure()
       run: |
-        sed -i 's/lugx-gaming-blue/lugx-gaming-green/g' kubernetes/ingress.yaml
-        kubectl apply -f kubernetes/ingress.yaml -n lugx-gaming
-
-    - name: Clean up Blue environment
-      run: |
-        kubectl delete -f kubernetes/ -n lugx-gaming-blue || true
+        sed -i "s|image: .*lugx-game-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:latest|g" kubernetes/game-service-deployment.yaml
+        sed -i "s|image: .*lugx-order-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:latest|g" kubernetes/order-service-deployment.yaml
+        sed -i "s|image: .*lugx-analytics-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:latest|g" kubernetes/analytics-service-deployment.yaml
+        sed -i "s|image: .*lugx-frontend-service:.*|image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:latest|g" kubernetes/frontend-deployment.yaml
+        kubectl apply -f kubernetes/ -n lugx-gaming
 
   periodic-tests:
     runs-on: ubuntu-latest
@@ -105,7 +107,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Run integration tests
-      run: |
-        chmod +x ./tests/integration-test.sh
-        ./tests/integration-test.sh
+#    - name: Run integration tests
+ #     run: |
+  #      chmod +x ./tests/integration-test.sh
+   #     ./tests/integration-test.sh

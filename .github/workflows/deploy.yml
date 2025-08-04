@@ -53,7 +53,7 @@ jobs:
         tags: buddhinethmalshan/lugx-frontend-service:blue
 
     - name: Set up Minikube
-      uses: engineerd/setup-minikube@v2
+      uses: engineerd/setup-minikube@v2.4.0
       with:
         minikube-version: 'v1.31.2'
         kubernetes-version: 'v1.27.3'

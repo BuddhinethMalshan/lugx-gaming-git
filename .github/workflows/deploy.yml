@@ -1,47 +1,80 @@
 name: Lugx Gaming CI/CD Pipeline
+
 on:
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 * * * *'
+
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
     - name: Build and push game-service
       uses: docker/build-push-action@v4
       with:
         context: ./game-service
         file: ./game-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-game-service:blue
+        tags: buddhinethmalshan/lugx-game-service:blue
+
     - name: Build and push order-service
       uses: docker/build-push-action@v4
       with:
         context: ./order-service
         file: ./order-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-order-service:blue
-    - name: Build and push lugx-analytics-service
+        tags: buddhinethmalshan/lugx-order-service:blue
+
+    - name: Build and push analytics-service
       uses: docker/build-push-action@v4
       with:
         context: ./analytics-service
         file: ./analytics-service/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-analytics-service:blue
+        tags: buddhinethmalshan/lugx-analytics-service:blue
+
     - name: Build and push frontend-service
       uses: docker/build-push-action@v4
       with:
         context: ./frontend
         file: ./frontend/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend-service:blue
+        tags: buddhinethmalshan/lugx-frontend-service:blue
+
+    - name: Set up Minikube
+      uses: engineerd/setup-minikube@v2
+      with:
+        minikube-version: 'v1.31.2'
+        kubernetes-version: 'v1.27.3'
+        driver: 'docker'
+        start-args: '--memory=4096mb --cpus=2'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y kubectl yq
+
+    - name: Run deploy.sh
+      run: |
+        chmod +x ./deploy.sh
+        ./deploy.sh
+
+    - name: Check deployment status
+      run: |
+        if [ $? -eq 0 ]; then
+          echo "Deployment to lugx-gaming-blue completed successfully!"
+        else
+          echo "Deployment failed. Rolling back or cleanup handled by deploy.sh."
+          exit 1
+        fi

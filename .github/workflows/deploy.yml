@@ -52,29 +52,29 @@ jobs:
         push: true
         tags: buddhinethmalshan/lugx-frontend-service:blue
 
-    - name: Set up Minikube
-      uses: engineerd/setup-minikube@v2.4.0
-      with:
-        minikube-version: 'v1.31.2'
-        kubernetes-version: 'v1.27.3'
-        driver: 'docker'
-        start-args: '--memory=4096mb --cpus=2'
+    # - name: Set up Minikube
+    #   uses: engineerd/setup-minikube@v2.4.0
+    #   with:
+    #     minikube-version: 'v1.31.2'
+    #     kubernetes-version: 'v1.27.3'
+    #     driver: 'docker'
+    #     start-args: '--memory=4096mb --cpus=2'
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y kubectl yq
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y kubectl yq
 
-    - name: Run deploy.sh
-      run: |
-        chmod +x ./deploy.sh
-        ./deploy.sh
+    # - name: Run deploy.sh
+    #   run: |
+    #     chmod +x ./deploy.sh
+    #     ./deploy.sh
 
-    - name: Check deployment status
-      run: |
-        if [ $? -eq 0 ]; then
-          echo "Deployment to lugx-gaming-blue completed successfully!"
-        else
-          echo "Deployment failed. Rolling back or cleanup handled by deploy.sh."
-          exit 1
-        fi
+    # - name: Check deployment status
+    #   run: |
+    #     if [ $? -eq 0 ]; then
+    #       echo "Deployment to lugx-gaming-blue completed successfully!"
+    #     else
+    #       echo "Deployment failed. Rolling back or cleanup handled by deploy.sh."
+    #       exit 1
+    #     fi

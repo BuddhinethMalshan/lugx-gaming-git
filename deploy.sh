@@ -138,30 +138,47 @@ if kubectl get ingress "$INGRESS_NAME" -n "$NAMESPACE" &>/dev/null; then
   kubectl delete ingress "$INGRESS_NAME" -n "$NAMESPACE"
 fi
 
-# Apply new ingress
+# Apply new Ingress
 echo "Applying new Ingress from $INGRESS_FILE..."
 kubectl apply -f "$INGRESS_FILE"
-
 echo "✅ Ingress applied successfully in namespace '$NAMESPACE'."
 
 
 
 
-
-#echo "Restoring backup ingress file..."
-#mv -f lugx-gaming-blue/bak-ingress.yaml lugx-gaming-blue/ingress.yaml
-
 # Deploy to Green
 echo "Deploying to lugx-gaming-blue namespace..."
 minikube kubectl -- apply -f lugx-gaming-blue/ -n lugx-gaming-blue --validate=false
 
-# Wait for pods to be ready (up to 60s)
-echo "Waiting for pods to be ready in Green environment..."
-minikube kubectl -- wait --for=condition=ready pod --all -n lugx-gaming-blue --timeout=60s
+# Wait for pods to be ready (extended wait)
+echo "Waiting for pods to be ready in Green environment (up to 5 minutes)..."
+
+max_wait_time=300  # seconds
+interval=10        # seconds
+elapsed=0
+
+while [ $elapsed -lt $max_wait_time ]; do
+  not_ready=$(minikube kubectl -- get pods -n lugx-gaming-blue --no-headers | grep -v 'Running\|Completed' | wc -l)
+  
+  if [ "$not_ready" -eq 0 ]; then
+    echo "✅ All pods are ready!"
+    break
+  else
+    echo "Waiting for pods... ($elapsed/$max_wait_time seconds)"
+    sleep $interval
+    elapsed=$((elapsed + interval))
+  fi
+done
+
+if [ $elapsed -ge $max_wait_time ]; then
+  echo "Timeout: Some pods did not become ready within $max_wait_time seconds."
+  minikube kubectl -- get pods -n lugx-gaming-blue
+  exit 1
+fi
 
 # Allow time for services to stabilize
-echo "Waiting 90 seconds for services to stabilize..."
-sleep 90
+echo "Waiting additional 60 seconds for services to stabilize..."
+sleep 60
 
 # Run integration tests
 echo "Running integration tests..."
@@ -171,10 +188,11 @@ test_result=${PIPESTATUS[0]}
 
 # Swap or rollback
 if [ $test_result -eq 0 ]; then
-  echo "Tests passed. Deployment to lugx-gaming-blue completed successfully!"
+  echo "✅ Tests passed. Deployment to lugx-gaming-blue completed successfully!"
 else
   echo "Tests failed. Rolling back to previous deployment..."
-  # Rename ingress.yaml to bak-ingress.yaml
+  
+  # Rollback logic (optional: uncomment ingress restore if needed)
   # mv lugx-gaming-blue/ingress.yaml lugx-gaming-blue/bak-ingress.yaml
 
   minikube kubectl -- apply -f lugx-gaming-blue/ -n lugx-gaming-blue --validate=false
